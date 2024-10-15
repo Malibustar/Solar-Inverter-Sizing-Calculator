@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inverter Load Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, select, button {
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .output {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .chat-box {
+            background-color: #ffeb99;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Inverter Load Calculator</h1>
+
+    <div class="chat-box">
+        If you are sure of the appliance rating, click the "Edit" button to change the "Power (W)" value.
+    </div>
+
+    <h3>Appliances</h3>
+    <div id="appliances">
+        <div class="appliance">
+            <label for="appliance-select">Choose Appliance:</label>
+            <select id="appliance-select" onchange="populatePower()">
+                <option value="Light Bulb">Light Bulb</option>
+                <option value="Ceiling Fan">Ceiling Fan</option>
+                <option value="Television">Television</option>
+                <option value="Laptop">Laptop</option>
+                <option value="Desktop Computer">Desktop Computer</option>
+                <option value="Refrigerator">Refrigerator</option>
+                <option value="Microwave">Microwave</option>
+                <option value="Split AC 1HP">Split AC 1HP</option>
+                <option value="Split AC 1.5HP">Split AC 1.5HP</option>
+                <option value="Split AC 2HP">Split AC 2HP</option>
+                <option value="Inverter AC 1HP">Inverter AC 1HP</option>
+                <option value="Inverter AC 1.5HP">Inverter AC 1.5HP</option>
+                <option value="Inverter AC 2HP">Inverter AC 2HP</option>
+                <option value="Washing Machine">Washing Machine</option>
+                <option value="Electric Kettle">Electric Kettle</option>
+                <option value="Water Heater">Water Heater</option>
+                <option value="Iron">Iron</option>
+                <option value="Blender">Blender</option>
+                <option value="Toaster">Toaster</option>
+                <option value="Sound System">Sound System</option>
+                <option value="Vacuum Cleaner">Vacuum Cleaner</option>
+                <option value="Other">Other (Custom)</option>
+            </select>
+            
+            <input type="text" placeholder="Power (W)" id="appliance-power" readonly>
+            <button onclick="enableEdit()">Edit</button>
+            <input type="number" placeholder="Hours Used per Day" id="appliance-hours" required>
+            <button onclick="addAppliance()">Add Appliance</button>
+        </div>
+    </div>
+
+    <table id="appliance-table">
+        <thead>
+            <tr>
+                <th>Appliance Name</th>
+                <th>Power (W)</th>
+                <th>Hours Used per Day</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Appliances will be added here -->
+        </tbody>
+    </table>
+    
+    <h3>Backup Time & System Information</h3>
+    <label for="backup-time">Backup Time (Hours):</label>
+    <input type="number" id="backup-time" required><br>
+
+    <label for="system-voltage">System Voltage (V):</label>
+    <select id="system-voltage">
+        <option value="12">12V</option>
+        <option value="24">24V</option>
+        <option value="48">48V</option>
+    </select><br>
+
+    <button onclick="calculate()">Calculate</button>
+
+    <div class="output" id="results">
+        <!-- Results will be displayed here -->
+    </div>
+
+    <script>
+        const appliances = [];
+
+        const appliancePowerRatings = {
+            "Light Bulb": 18,
+            "Ceiling Fan": 75,
+            "Television": 150,
+            "Laptop": 65,
+            "Desktop Computer": 200,
+            "Refrigerator": 250,
+            "Microwave": 1000,
+            "Split AC 1HP": 1200,
+            "Split AC 1.5HP": 1500,
+            "Split AC 2HP": 2000,
+            "Inverter AC 1HP": 1000,
+            "Inverter AC 1.5HP": 1200,
+            "Inverter AC 2HP": 1500,
+            "Washing Machine": 500,
+            "Electric Kettle": 1200,
+            "Water Heater": 3000,
+            "Iron": 1000,
+            "Blender": 400,
+            "Toaster": 800,
+            "Sound System": 200,
+            "Vacuum Cleaner": 600
+        };
+
+        function populatePower() {
+            const applianceSelect = document.getElementById('appliance-select');
+            const appliancePowerInput = document.getElementById('appliance-power');
+            const selectedAppliance = applianceSelect.value;
+            
+            if (selectedAppliance === "Other") {
+                appliancePowerInput.value = '';
+                appliancePowerInput.readOnly = false;
+            } else {
+                const defaultPower = appliancePowerRatings[selectedAppliance] || 0;
+                appliancePowerInput.value = `${defaultPower} watts`;
+                appliancePowerInput.readOnly = true; // Make it readonly by default
+            }
+        }
+
+        function enableEdit() {
+            const appliancePowerInput = document.getElementById('appliance-power');
+            appliancePowerInput.readOnly = false; // Make the power field editable
+            if (appliancePowerInput.value.includes('watts')) {
+                appliancePowerInput.value = appliancePowerInput.value.replace(' watts', ''); // Remove "watts" to edit
+            }
+        }
+
+        // Event to add "watts" back after user finishes editing
+        document.getElementById('appliance-power').addEventListener('blur', function() {
+            const powerInput = document.getElementById('appliance-power');
+            if (powerInput.value && !powerInput.value.includes('watts')) {
+                powerInput.value += ' watts'; // Append "watts" if not already present
+            }
+        });
+
+        function getApplianceName() {
+            const applianceSelect = document.getElementById('appliance-select');
+            return applianceSelect.value === 'Other' ? 'Custom Appliance' : applianceSelect.value;
+        }
+
+        function addAppliance() {
+            const name = getApplianceName();
+            const power = parseFloat(document.getElementById('appliance-power').value);
+            const hours = parseFloat(document.getElementById('appliance-hours').value);
+            
+            if (name && power > 0 && hours > 0) {
+                const appliance = { name, power, hours };
+                appliances.push(appliance);
+
+                const table = document.getElementById('appliance-table').getElementsByTagName('tbody')[0];
+                const newRow = table.insertRow();
+                const nameCell = newRow.insertCell(0);
+                const powerCell = newRow.insertCell(1);
+                const hoursCell = newRow.insertCell(2);
+                nameCell.innerHTML = name;
+                powerCell.innerHTML = `${power} watts`;
+                hoursCell.innerHTML = hours;
+
+                document.getElementById('appliance-power').value = '';
+                document.getElementById('appliance-hours').value = '';
+                document.getElementById('appliance-select').value = 'Light Bulb';
+                populatePower();
+            } else {
+                alert("Please enter valid appliance details.");
+            }
+        }
+
+        function calculateTotalPower() {
+            let totalPower = 0;
+            appliances.forEach(appliance => {
+                totalPower += appliance.power;
+            });
+            return totalPower;
+        }
+
+        function calculate() {
+            const backupTime = parseFloat(document.getElementById('backup-time').value);
+            const systemVoltage = parseInt(document.getElementById('system-voltage').value);
+            const totalPower = calculateTotalPower();
+
+            if (totalPower === 0 || backupTime === 0) {
+                alert("Please add appliances and specify backup time.");
+                return;
+            }
+
+            // Inverter size calculation with 20% safety margin
+            const inverterSize = totalPower * 1.2;
+            const inverterSizeKVA = inverterSize / 1000; // Convert to kVA
+
+            // Battery capacity calculation
+            const batteryCapacity = (totalPower * backupTime) / systemVoltage;
+
+            // Charging current calculation
+            const chargingCurrent = batteryCapacity * 0.1;
+
+            // Current rating calculation
+            const currentRating = totalPower / systemVoltage;
+
+            // Overall current
+            const overallCurrent = chargingCurrent + currentRating;
+
+            // Solar panel size calculation
+            const chargingPower = systemVoltage * overallCurrent;
+
+            // Displaying the results
+            document.getElementById('results').innerHTML = `
+                <h3>Results:</h3>
+                <p><strong>Total Power:</strong> ${totalPower} watts</p>
+                <p><strong>Inverter Size:</strong> ${inverterSizeKVA.toFixed(2)} kVA</p>
+                <p><strong>Battery Capacity:</strong> ${batteryCapacity.toFixed(2)} Ah</p>
+                <p><strong>Solar Panel Size:</strong> ${chargingPower.toFixed(2)} watts</p>
+            `;
+        }
+    </script>
+
+</body>
+</html>
+
+
+
